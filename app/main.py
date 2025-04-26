@@ -1,95 +1,113 @@
+#import file 
+from data.db import get_connection
+
+
+import assets.styles.style   # Import du fichier style.py
+
+#import module
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
+
 
 # --- Creating the main window ---
 window = tk.Tk()
 window.title("Optimizing Delivery Management")
-window.geometry("400x400")
+window.geometry("700x700")
+window.configure(bg=assets.styles.style.bg_color)
+
+# --- Database connection ---
+conn = get_connection()
+cursor = conn.cursor()
 
 # --- Function to clear the window ---
 def clear_window():
-    """Removes widgets except the menu."""
     for widget in window.winfo_children():
         if isinstance(widget, tk.Menu):
-            continue  # Do not remove the menu bar
+            continue
         widget.destroy()
 
 # --- Menu functions ---
 def window_home(clear=True):
-    """Displays only the home page."""
     if clear:
         clear_window()
-    tk.Label(window, text="Welcome", font=("Arial", 14)).pack(pady=20)
+    tk.Label(window, text="Welcome", font=assets.styles.style.font_title, bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack(pady=assets.styles.style.padding_y)
 
 def window_data_command(clear=True):
-    """Displays the order form."""
     if clear:
         clear_window()
 
-    # Adding labels and input fields
-    tk.Label(window, text="Customer Name:").pack()
-    entry_name = tk.Entry(window)
-    entry_name.pack()
+    labels = ["Customer Name", "Delivery Address", "Start Address", "Weight (kg)", "Ordered Product", "Delivery Date", "Payment Method", "Price"]
+    entries = {}
 
-    tk.Label(window, text="Delivery Address:").pack()
-    entry_address = tk.Entry(window)
-    entry_address.pack()
+    for label in labels:
+        tk.Label(window, text=label + ":", font=assets.styles.style.font_label, bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack(pady=(assets.styles.style.padding_y // 2))
+        entry = tk.Entry(window)
+        entry.pack(padx=assets.styles.style.padding_x, pady=(0, assets.styles.style.padding_y))
+        entries[label] = entry
 
-    tk.Label(window, text="Weight (kg):").pack()
-    entry_weight = tk.Entry(window)
-    entry_weight.pack()
-
-    tk.Label(window, text="Ordered Product:").pack()
-    entry_product = tk.Entry(window)
-    entry_product.pack()
-
-    tk.Label(window, text="Delivery Date:").pack()
-    entry_date = tk.Entry(window)
-    entry_date.pack()
-
-    tk.Label(window, text="Payment Method:").pack()
-    entry_payment = tk.Entry(window)
-    entry_payment.pack()
-
-    # Button to validate the order
     def validate_order():
-        """Validates the order and resets the fields."""
-        name = entry_name.get()
-        address = entry_address.get()
-        weight = entry_weight.get()
-        product = entry_product.get()
-        date = entry_date.get()
-        payment = entry_payment.get()
-
-        if name and address and weight and product and date and payment:
-            messagebox.showinfo("Order Sent", f"Order for {name} recorded!\n"
-                                              f"Address: {address}\n"
-                                              f"Weight: {weight} kg\n"
-                                              f"Product: {product}\n"
-                                              f"Delivery Date: {date}\n"
-                                              f"Payment Method: {payment}")
-
-            # Resetting the fields
-            entry_name.delete(0, tk.END)
-            entry_address.delete(0, tk.END)
-            entry_weight.delete(0, tk.END)
-            entry_product.delete(0, tk.END)
-            entry_date.delete(0, tk.END)
-            entry_payment.delete(0, tk.END)
+        data = {label: entry.get() for label, entry in entries.items()}
+        if all(data.values()):
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO orders (customer_name, delivery_address, start_address, weight, product, delivery_date, payment_method, price)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (data["Customer Name"], data["Delivery Address"], data["Start Address"],
+                     data["Weight (kg)"], data["Ordered Product"], data["Delivery Date"],
+                     data["Payment Method"], data["Price"])
+                )
+                conn.commit()
+                messagebox.showinfo("Order Sent", f"Order for {data['Customer Name']} recorded!")
+                for entry in entries.values():
+                    entry.delete(0, tk.END)
+            except Exception as e:
+                messagebox.showerror("Database Error", str(e))
         else:
             messagebox.showwarning("Error", "Please fill in all the fields.")
 
-    tk.Button(window, text="Send Order", command=validate_order).pack()
-    tk.Button(window, text="Back to Home", command=window_home).pack(pady=10)
+    tk.Button(window, text="Send Order", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color, command=validate_order).pack(pady=assets.styles.style.padding_y)
+    tk.Button(window, text="Visualize Route", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
+              command=lambda: messagebox.showinfo("Route", "Feature coming soon!")).pack(pady=assets.styles.style.padding_y)
+    tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
+              command=window_home).pack(pady=assets.styles.style.padding_y)
+
+def window_view_orders(clear=True):
+    if clear:
+        clear_window()
+
+    tk.Label(window, text="All Orders", font=assets.styles.style.font_title, bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack(pady=assets.styles.style.padding_y)
+
+    tree = ttk.Treeview(window, columns=("ID", "Name", "Delivery Address", "Start Address", "Weight", "Product", "Date", "Payment", "Price"), show='headings')
+    
+    for col in tree["columns"]:
+        tree.heading(col, text=col)
+        tree.column(col, width=100)
+
+    tree.pack(expand=True, fill='both', padx=assets.styles.style.padding_x, pady=assets.styles.style.padding_y)
+
+    try:
+        cursor.execute("SELECT id, customer_name, delivery_address, start_address, weight, product, delivery_date, payment_method, price FROM orders")
+        orders = cursor.fetchall()
+        for order in orders:
+            tree.insert("", tk.END, values=order)
+    except Exception as e:
+        messagebox.showerror("Database Error", str(e))
+
+    tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
+              command=window_home).pack(pady=assets.styles.style.padding_y)
 
 # --- Creating the menu ---
 menu_bar = tk.Menu(window)
 menu_file = tk.Menu(menu_bar, tearoff=0)
-menu_file.add_command(label="Home page", command=lambda: window_home(True))
+menu_file.add_command(label="Home", command=lambda: window_home(True))
 menu_file.add_separator()
-menu_file.add_command(label="New order", command=lambda: window_data_command(True))
+menu_file.add_command(label="New Order", command=lambda: window_data_command(True))
 menu_file.add_separator()
-menu_file.add_command(label="Exit software", command=window.quit)
+menu_file.add_command(label="View Orders", command=lambda: window_view_orders(True))
+menu_file.add_separator()
+menu_file.add_command(label="Exit", command=window.quit)
 menu_bar.add_cascade(label="Management", menu=menu_file)
 
 menu_help = tk.Menu(menu_bar, tearoff=0)
