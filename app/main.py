@@ -19,6 +19,9 @@ window.configure(bg=assets.styles.style.bg_color)
 conn = get_connection()
 cursor = conn.cursor()
 
+# for connection state 
+connected = False
+
 # --- Function to clear the window ---
 def clear_window():
     for widget in window.winfo_children():
@@ -26,11 +29,72 @@ def clear_window():
             continue
         widget.destroy()
 
+# hide menu if disconnect 
+def update_menu_visibility():
+    if connected:
+        window.config(menu=menu_bar)
+    else:
+        window.config(menu="")  # Cache le menu
+
 # --- Menu functions ---
 def window_home(clear=True):
+    global connected
     if clear:
         clear_window()
-    tk.Label(window, text="Welcome", font=assets.styles.style.font_title, bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack(pady=assets.styles.style.padding_y)
+
+    update_menu_visibility()
+
+    tk.Label(
+        window,
+        text="Login",
+        font=assets.styles.style.font_title,
+        bg=assets.styles.style.bg_color,
+        fg=assets.styles.style.label_color
+    ).pack(pady=assets.styles.style.padding_y)
+
+    tk.Label(window, text="Nom d'utilisateur :", font=assets.styles.style.font_label,
+             bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack()
+    username_entry = tk.Entry(window, font=assets.styles.style.font_label)
+    username_entry.pack()
+
+    tk.Label(window, text="Mot de passe :", font=assets.styles.style.font_label,
+             bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack()
+    password_entry = tk.Entry(window, font=assets.styles.style.font_label, show="*")
+    password_entry.pack()
+
+    def try_login():
+        global connected
+        username = username_entry.get()
+        password = password_entry.get()
+
+        if not username or not password:
+            messagebox.showwarning("Erreur", "Veuillez remplir tous les champs")
+            return
+
+        try:
+            cursor.execute(
+                "SELECT * FROM users WHERE username = %s AND password = %s",
+                (username, password)
+            )
+            user = cursor.fetchone()
+            if user:
+                connected = True
+                update_menu_visibility()
+                messagebox.showinfo("Connexion réussie", f"Bienvenue, {username} !")
+                window_data_command(True)
+            else:
+                messagebox.showerror("Connexion refusée", "Nom d'utilisateur ou mot de passe incorrect.")
+        except Exception as e:
+            messagebox.showerror("Erreur base de données", str(e))
+
+    tk.Button(
+        window,
+        text="Se connecter",
+        font=assets.styles.style.font_button,
+        bg=assets.styles.style.button_color,
+        fg=assets.styles.style.button_text_color,
+        command=try_login
+    ).pack(pady=10)
 
 def window_data_command(clear=True):
     if clear:
