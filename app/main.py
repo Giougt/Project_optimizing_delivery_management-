@@ -37,7 +37,7 @@ def update_menu_visibility():
         window.config(menu="")  # Cache le menu
 
 # --- Menu functions ---
-def window_home(clear=True):
+def login_page(clear=True):
     global connected
     if clear:
         clear_window()
@@ -68,7 +68,7 @@ def window_home(clear=True):
         password = password_entry.get()
 
         if not username or not password:
-            messagebox.showwarning("Erreur", "Veuillez remplir tous les champs")
+            messagebox.showwarning("Error", "Please fill in all fields")
             return
 
         try:
@@ -80,22 +80,30 @@ def window_home(clear=True):
             if user:
                 connected = True
                 update_menu_visibility()
-                messagebox.showinfo("Connexion réussie", f"Bienvenue, {username} !")
+                messagebox.showinfo("Sucess connexion", f"Welcome, {username} !")
                 window_data_command(True)
             else:
-                messagebox.showerror("Connexion refusée", "Nom d'utilisateur ou mot de passe incorrect.")
+                messagebox.showerror("Connexion Denied", "Username or password incorrect.")
         except Exception as e:
-            messagebox.showerror("Erreur base de données", str(e))
+            messagebox.showerror("Error database", str(e))
 
     tk.Button(
         window,
-        text="Se connecter",
+        text="Login",
         font=assets.styles.style.font_button,
         bg=assets.styles.style.button_color,
         fg=assets.styles.style.button_text_color,
         command=try_login
     ).pack(pady=10)
 
+# logout function
+def logout():
+    global connected
+    connected = False
+    update_menu_visibility()
+    login_page(True)  # Redirection home page 
+
+# command function
 def window_data_command(clear=True):
     if clear:
         clear_window()
@@ -135,7 +143,7 @@ def window_data_command(clear=True):
     tk.Button(window, text="Visualize Route", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
               command=lambda: messagebox.showinfo("Route", "Feature coming soon!")).pack(pady=assets.styles.style.padding_y)
     tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
-              command=window_home).pack(pady=assets.styles.style.padding_y)
+              command=window_home_page).pack(pady=assets.styles.style.padding_y)
 
 def window_view_orders(clear=True):
     if clear:
@@ -160,16 +168,66 @@ def window_view_orders(clear=True):
         messagebox.showerror("Database Error", str(e))
 
     tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
-              command=window_home).pack(pady=assets.styles.style.padding_y)
+              command=window_home_page).pack(pady=assets.styles.style.padding_y)
+
+
+def window_home_page(clear=True):
+    if clear:
+        clear_window()
+
+    tk.Label(
+        window,
+        text="Bienvenue sur l'Optimizing Delivery Management",
+        font=assets.styles.style.font_title,
+        bg=assets.styles.style.bg_color,
+        fg=assets.styles.style.label_color
+    ).pack(pady=assets.styles.style.padding_y)
+
+    tk.Label(
+        window,
+        text="Veuillez choisir une option ci-dessous :",
+        font=assets.styles.style.font_label,
+        bg=assets.styles.style.bg_color,
+        fg=assets.styles.style.label_color
+    ).pack(pady=assets.styles.style.padding_y)
+
+    tk.Button(
+        window,
+        text="Connexion",
+        font=assets.styles.style.font_button,
+        bg=assets.styles.style.button_color,
+        fg=assets.styles.style.button_text_color,
+        command=login_page
+    ).pack(pady=10)
+
+    tk.Button(
+        window,
+        text="Voir les commandes",
+        font=assets.styles.style.font_button,
+        bg=assets.styles.style.button_color,
+        fg=assets.styles.style.button_text_color,
+        command=window_view_orders
+    ).pack(pady=10)
+
+    tk.Button(
+        window,
+        text="Passer une commande",
+        font=assets.styles.style.font_button,
+        bg=assets.styles.style.button_color,
+        fg=assets.styles.style.button_text_color,
+        command=window_data_command
+    ).pack(pady=10)
+
+
 
 # --- Creating the menu ---
 menu_bar = tk.Menu(window)
 menu_file = tk.Menu(menu_bar, tearoff=0)
-menu_file.add_command(label="Home", command=lambda: window_home(True))
-menu_file.add_separator()
 menu_file.add_command(label="New Order", command=lambda: window_data_command(True))
 menu_file.add_separator()
 menu_file.add_command(label="View Orders", command=lambda: window_view_orders(True))
+menu_file.add_separator()
+menu_file.add_command(label="Logout", command=logout)
 menu_file.add_separator()
 menu_file.add_command(label="Exit", command=window.quit)
 menu_bar.add_cascade(label="Management", menu=menu_file)
@@ -181,7 +239,7 @@ menu_bar.add_cascade(label="Help", menu=menu_help)
 window.config(menu=menu_bar)
 
 # --- Displaying the home page ---
-window_home(clear=False)
+login_page(clear=False)
 
 # --- Main loop ---
 window.mainloop()
