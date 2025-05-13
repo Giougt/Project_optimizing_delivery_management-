@@ -7,7 +7,7 @@ import assets.styles.style   # Import du fichier style.py
 #import module
 import tkinter as tk
 from tkinter import messagebox, ttk
-
+from PIL import Image, ImageTk
 
 # --- Creating the main window ---
 window = tk.Tk()
@@ -171,53 +171,77 @@ def window_view_orders(clear=True):
               command=window_home_page).pack(pady=assets.styles.style.padding_y)
 
 
+def load_local_image(path, size=(150, 150)):
+    try:
+        im = Image.open(path)
+        im = im.resize(size, Image.Resampling.LANCZOS)
+        return ImageTk.PhotoImage(im)
+    except Exception as e:
+        print(f"Erreur chargement image: {e}")
+        return None
+
 def window_home_page(clear=True):
     if clear:
         clear_window()
 
+    window.configure(bg=assets.styles.style.bg_color)
+
+    # === Scrollable frame setup ===
+    canvas = tk.Canvas(window, bg=assets.styles.style.bg_color, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(window, orient="vertical", command=canvas.yview)
+    scroll_frame = tk.Frame(canvas, bg=assets.styles.style.bg_color)
+
+    scroll_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(
+            scrollregion=canvas.bbox("all")
+        )
+    )
+
+    canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # === Content inside scrollable frame ===
     tk.Label(
-        window,
-        text="Welcome to Optimizing Delivery Management app",
+        scroll_frame,
+        text="Welcome to the Delivery Management Optimization App",
         font=assets.styles.style.font_title,
         bg=assets.styles.style.bg_color,
         fg=assets.styles.style.label_color
-    ).pack(pady=assets.styles.style.padding_y)
+    ).pack(pady=30)
 
-    tk.Label(
-        window,
-        text="Menu :",
-        font=assets.styles.style.font_label,
-        bg=assets.styles.style.bg_color,
-        fg=assets.styles.style.label_color
-    ).pack(pady=assets.styles.style.padding_y)
+    def add_section(image_path, description, button_text, command):
+        img = load_local_image(image_path)
+        if img:
+            lbl = tk.Label(scroll_frame, image=img, bg=assets.styles.style.bg_color)
+            lbl.image = img  # Prevent garbage collection
+            lbl.pack(pady=5)
 
-    tk.Button(
-        window,
-        text="New command",
-        font=assets.styles.style.font_button,
-        bg=assets.styles.style.button_color,
-        fg=assets.styles.style.button_text_color,
-        command=window_data_command
-    ).pack(pady=10)
+        tk.Label(
+            scroll_frame,
+            text=description,
+            font=assets.styles.style.font_label,
+            bg=assets.styles.style.bg_color,
+            fg=assets.styles.style.label_color,
+            wraplength=400,
+            justify="center"
+        ).pack(pady=5)
 
-    tk.Button(
-        window,
-        text="Show commands",
-        font=assets.styles.style.font_button,
-        bg=assets.styles.style.button_color,
-        fg=assets.styles.style.button_text_color,
-        command=window_view_orders
-    ).pack(pady=10)
+        tk.Button(
+            scroll_frame,
+            text=button_text,
+            font=assets.styles.style.font_button,
+            bg=assets.styles.style.button_color,
+            fg=assets.styles.style.button_text_color,
+            command=command
+        ).pack(pady=10)
 
-    tk.Button(
-        window,
-        text="Logout",
-        font=assets.styles.style.font_button,
-        bg=assets.styles.style.button_color,
-        fg=assets.styles.style.button_text_color,
-        command=logout
-    ).pack(pady=10)
-
+    add_section("images/two_packs.png", "Create a new delivery order quickly and easily.", "New Order", window_data_command)
+    add_section("images/two_packs.png", "View your existing orders and track deliveries.", "View Orders", window_view_orders)
+    add_section("images/two_packs.png", "Log out securely from the application.", "Logout", logout)
 
 
 # --- Creating the menu ---
