@@ -81,7 +81,7 @@ def login_page(clear=True):
                 connected = True
                 update_menu_visibility()
                 messagebox.showinfo("Sucess connexion", f"Welcome, {username} !")
-                window_data_command(True)
+                window_home_page(True)
             else:
                 messagebox.showerror("Connexion Denied", "Username or password incorrect.")
         except Exception as e:
@@ -177,7 +177,7 @@ def window_home_page(clear=True):
 
     tk.Label(
         window,
-        text="Bienvenue sur l'Optimizing Delivery Management",
+        text="Welcome to Optimizing Delivery Management app",
         font=assets.styles.style.font_title,
         bg=assets.styles.style.bg_color,
         fg=assets.styles.style.label_color
@@ -185,7 +185,7 @@ def window_home_page(clear=True):
 
     tk.Label(
         window,
-        text="Veuillez choisir une option ci-dessous :",
+        text="Menu :",
         font=assets.styles.style.font_label,
         bg=assets.styles.style.bg_color,
         fg=assets.styles.style.label_color
@@ -193,16 +193,16 @@ def window_home_page(clear=True):
 
     tk.Button(
         window,
-        text="Connexion",
+        text="New command",
         font=assets.styles.style.font_button,
         bg=assets.styles.style.button_color,
         fg=assets.styles.style.button_text_color,
-        command=login_page
+        command=window_data_command
     ).pack(pady=10)
 
     tk.Button(
         window,
-        text="Voir les commandes",
+        text="Show commands",
         font=assets.styles.style.font_button,
         bg=assets.styles.style.button_color,
         fg=assets.styles.style.button_text_color,
@@ -211,11 +211,11 @@ def window_home_page(clear=True):
 
     tk.Button(
         window,
-        text="Passer une commande",
+        text="Logout",
         font=assets.styles.style.font_button,
         bg=assets.styles.style.button_color,
         fg=assets.styles.style.button_text_color,
-        command=window_data_command
+        command=logout
     ).pack(pady=10)
 
 
