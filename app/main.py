@@ -8,6 +8,10 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import webbrowser
 import urllib.parse
+from pathlib import Path
+import urllib.parse
+import pyautogui
+import time
 
 # --- Creating the main window ---
 window = tk.Tk()
@@ -110,15 +114,27 @@ def open_latest_route_in_maps():
         result = cursor.fetchone()
         if result:
             start_address, delivery_address = result
-            # Encodage des adresses pour l'URL
             start_encoded = urllib.parse.quote_plus(start_address)
             end_encoded = urllib.parse.quote_plus(delivery_address)
             url = f"https://www.google.com/maps/dir/{start_encoded}/{end_encoded}"
             webbrowser.open(url)
+
+            # Attendre que la carte s'affiche correctement
+            time.sleep(8)
+
+            # Créer dossier s'il n'existe pas
+            images_path = Path("images")
+            images_path.mkdir(exist_ok=True)
+
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            file_path = images_path / f"route_{timestamp}.png"
+            pyautogui.screenshot().save(file_path)
+
+            messagebox.showinfo("Screenshot Saved", f"Map screenshot saved as {file_path}")
         else:
             messagebox.showinfo("No Orders", "No orders found in the database.")
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to open route: {e}")
+        messagebox.showerror("Error", f"Failed to open route or save screenshot:\n{e}")
 
 # logout function
 def logout():
