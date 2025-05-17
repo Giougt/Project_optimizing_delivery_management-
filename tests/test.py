@@ -1,13 +1,13 @@
-import mysql.connector
+# import module 
 import random
 from data.db import get_connection
 from datetime import datetime, timedelta
 
-# Connexion à MySQL
+# connect MySQL
 conn = get_connection()
 cursor = conn.cursor()
 
-# Données exemples
+# data
 customers = ["Alice Martin", "Bob Dupont", "Chloé Bernard", "David Leroy"]
 products = ["Téléphone", "Ordinateur portable", "Imprimante", "Clé USB"]
 addresses = [
@@ -18,7 +18,7 @@ addresses = [
 ]
 payment_methods = ["Carte bancaire", "Paypal", "Espèces", "Virement"]
 
-# Génération et insertion de plusieurs lignes
+# random data to insert 
 for i in range(10):
     data = {
         "customer_name": random.choice(customers),
@@ -30,7 +30,6 @@ for i in range(10):
         "payment_method": random.choice(payment_methods),
         "price": round(random.uniform(50.0, 1500.0), 2)
     }
-
     query = """
         INSERT INTO orders (
             customer_name, delivery_address, start_address,
@@ -44,4 +43,4 @@ conn.commit()
 cursor.close()
 conn.close()
 
-print("✅ 10 commandes insérées avec succès dans la base MySQL.")
+print("10 commands send to database.")
