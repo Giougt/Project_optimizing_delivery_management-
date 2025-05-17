@@ -7,7 +7,6 @@ import assets.styles.style
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from PIL import Image, ImageTk
 import webbrowser
 import urllib.parse
 from pathlib import Path
@@ -213,14 +212,6 @@ def window_view_orders(clear=True):
               command=window_home_page).pack(pady=assets.styles.style.padding_y)
 
 
-def load_local_image(path, size=(150, 150)):
-    try:
-        im = Image.open(path)
-        im = im.resize(size, Image.Resampling.LANCZOS)
-        return ImageTk.PhotoImage(im)
-    except Exception as e:
-        print(f"Erreur chargement image: {e}")
-        return None
 
 def window_home_page(clear=True):
     if clear:
@@ -231,59 +222,59 @@ def window_home_page(clear=True):
     # === Scrollable frame setup ===
     canvas = tk.Canvas(window, bg=assets.styles.style.bg_color, highlightthickness=0)
     scrollbar = ttk.Scrollbar(window, orient="vertical", command=canvas.yview)
-    scroll_frame = tk.Frame(canvas, bg=assets.styles.style.bg_color)
-
-    scroll_frame.bind(
-        "<Configure>",
-        lambda e: canvas.configure(
-            scrollregion=canvas.bbox("all")
-        )
-    )
-
-    canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
     canvas.configure(yscrollcommand=scrollbar.set)
+
+    outer_frame = tk.Frame(canvas, bg=assets.styles.style.bg_color)
+    canvas.create_window((0, 0), window=outer_frame, anchor="n", width=window.winfo_width())
+
+    outer_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
 
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    # === Content inside scrollable frame ===
+    # === Title ===
     tk.Label(
-        scroll_frame,
+        outer_frame,
         text="Welcome to the Delivery Management Optimization App",
         font=assets.styles.style.font_title,
         bg=assets.styles.style.bg_color,
-        fg=assets.styles.style.label_color
-    ).pack(pady=30)
+        fg=assets.styles.style.label_color,
+        wraplength=600,
+        justify="center"
+    ).pack(pady=(40, 30))
 
-    def add_section(image_path, description, button_text, command):
-        img = load_local_image(image_path)
-        if img:
-            lbl = tk.Label(scroll_frame, image=img, bg=assets.styles.style.bg_color)
-            lbl.image = img  # Prevent garbage collection
-            lbl.pack(pady=5)
+    def add_section(description, button_text, command):
+        section = tk.Frame(outer_frame, bg=assets.styles.style.bg_color)
+        section.pack(pady=20)
 
         tk.Label(
-            scroll_frame,
+            section,
             text=description,
             font=assets.styles.style.font_label,
             bg=assets.styles.style.bg_color,
             fg=assets.styles.style.label_color,
-            wraplength=400,
+            wraplength=500,
             justify="center"
-        ).pack(pady=5)
+        ).pack(pady=8)
 
         tk.Button(
-            scroll_frame,
+            section,
             text=button_text,
             font=assets.styles.style.font_button,
             bg=assets.styles.style.button_color,
             fg=assets.styles.style.button_text_color,
-            command=command
+            command=command,
+            padx=20,
+            pady=6
         ).pack(pady=10)
 
-    add_section("images/two_packs.png", "Create a new delivery order quickly and easily.", "New Order", window_data_command)
-    add_section("images/two_packs.png", "View your existing orders and track deliveries.", "View Orders", window_view_orders)
-    add_section("images/two_packs.png", "Log out securely from the application.", "Logout", logout)
+    # === Add sections (no images) ===
+    add_section("Create a new delivery order quickly and easily.", "New Order", window_data_command)
+    add_section("View your existing orders and track deliveries.", "View Orders", window_view_orders)
+    add_section("Log out securely from the application.", "Logout", logout)
 
         
 # --- Creating the menu ---
