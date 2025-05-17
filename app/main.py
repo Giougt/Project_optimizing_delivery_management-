@@ -1,13 +1,19 @@
 #import file 
 from data.db import get_connection
 
-
-import assets.styles.style   # Import du fichier style.py
+import assets.styles.style  
 
 #import module
 import tkinter as tk
 from tkinter import messagebox, ttk
+
 from PIL import Image, ImageTk
+import webbrowser
+import urllib.parse
+from pathlib import Path
+import urllib.parse
+import pyautogui
+import time
 
 # --- Creating the main window ---
 window = tk.Tk()
@@ -34,7 +40,7 @@ def update_menu_visibility():
     if connected:
         window.config(menu=menu_bar)
     else:
-        window.config(menu="")  # Cache le menu
+        window.config(menu="") 
 
 # --- Menu functions ---
 def login_page(clear=True):
@@ -96,12 +102,48 @@ def login_page(clear=True):
         command=try_login
     ).pack(pady=10)
 
+# for route visualize 
+def open_latest_route_in_maps():
+    try:
+        cursor.execute(
+            """
+            SELECT start_address, delivery_address 
+            FROM orders 
+            ORDER BY id DESC 
+            LIMIT 1
+            """
+        )
+        result = cursor.fetchone()
+        if result:
+            start_address, delivery_address = result
+            start_encoded = urllib.parse.quote_plus(start_address)
+            end_encoded = urllib.parse.quote_plus(delivery_address)
+            url = f"https://www.google.com/maps/dir/{start_encoded}/{end_encoded}"
+            webbrowser.open(url)
+
+            # Attendre que la carte s'affiche correctement
+            time.sleep(8)
+
+            # Créer dossier s'il n'existe pas
+            images_path = Path("images")
+            images_path.mkdir(exist_ok=True)
+
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            file_path = images_path / f"route_{timestamp}.png"
+            pyautogui.screenshot().save(file_path)
+
+            messagebox.showinfo("Screenshot Saved", f"Map screenshot saved as {file_path}")
+        else:
+            messagebox.showinfo("No Orders", "No orders found in the database.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to open route or save screenshot:\n{e}")
+
 # logout function
 def logout():
     global connected
     connected = False
     update_menu_visibility()
-    login_page(True)  # Redirection home page 
+    login_page(True)  # redirect home page
 
 # command function
 def window_data_command(clear=True):
@@ -141,7 +183,7 @@ def window_data_command(clear=True):
 
     tk.Button(window, text="Send Order", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color, command=validate_order).pack(pady=assets.styles.style.padding_y)
     tk.Button(window, text="Visualize Route", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
-              command=lambda: messagebox.showinfo("Route", "Feature coming soon!")).pack(pady=assets.styles.style.padding_y)
+              command=open_latest_route_in_maps).pack(pady=assets.styles.style.padding_y)
     tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
               command=window_home_page).pack(pady=assets.styles.style.padding_y)
 
@@ -243,7 +285,7 @@ def window_home_page(clear=True):
     add_section("images/two_packs.png", "View your existing orders and track deliveries.", "View Orders", window_view_orders)
     add_section("images/two_packs.png", "Log out securely from the application.", "Logout", logout)
 
-
+        
 # --- Creating the menu ---
 menu_bar = tk.Menu(window)
 menu_file = tk.Menu(menu_bar, tearoff=0)
