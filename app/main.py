@@ -129,7 +129,7 @@ def login_page(clear=True):
                             (data["username"], data["password"])
                         )
                         conn.commit()
-                        messagebox.showinfo("Data user send sucessfuly ")
+                        messagebox.showinfo("Data user","Sucess to send")
                         for entry in entries.values():
                             entry.delete(0, tk.END)
                     except Exception as e:
@@ -154,7 +154,6 @@ def login_page(clear=True):
                 fg=assets.styles.style.button_text_color,
                 command=login_page
             ).pack(pady=10)
-
 
     tk.Button(
         window,
@@ -284,8 +283,6 @@ def window_view_orders(clear=True):
     tk.Button(window, text="Back to Home", font=assets.styles.style.font_button, bg=assets.styles.style.button_color, fg=assets.styles.style.button_text_color,
               command=window_home_page).pack(pady=assets.styles.style.padding_y)
 
-
-
 def window_home_page(clear=True):
     if clear:
         clear_window()
@@ -349,7 +346,6 @@ def window_home_page(clear=True):
     add_section("View your existing orders and track deliveries.", "View Orders", window_view_orders)
     add_section("Log out securely from the application.", "Logout", logout)
 
-        
 # --- Creating the menu ---
 menu_bar = tk.Menu(window)
 menu_file = tk.Menu(menu_bar, tearoff=0)
