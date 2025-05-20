@@ -57,16 +57,17 @@ def login_page(clear=True):
         fg=assets.styles.style.label_color
     ).pack(pady=assets.styles.style.padding_y)
 
-    tk.Label(window, text="Nom d'utilisateur :", font=assets.styles.style.font_label,
+    tk.Label(window, text="Username :", font=assets.styles.style.font_label,
              bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack()
     username_entry = tk.Entry(window, font=assets.styles.style.font_label)
     username_entry.pack()
 
-    tk.Label(window, text="Mot de passe :", font=assets.styles.style.font_label,
+    tk.Label(window, text="Password :", font=assets.styles.style.font_label,
              bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack()
     password_entry = tk.Entry(window, font=assets.styles.style.font_label, show="*")
     password_entry.pack()
 
+    # send data user authentification
     def try_login():
         global connected
         username = username_entry.get()
@@ -92,6 +93,69 @@ def login_page(clear=True):
         except Exception as e:
             messagebox.showerror("Error database", str(e))
 
+    def create_account(clear=True):
+        if clear:
+            clear_window()
+            labels = ["name","lastname","email","country","age","password","confirm password","username"]
+            entries = {}
+
+            for label in labels:
+                tk.Label(window, text=label + ":", font=assets.styles.style.font_label, bg=assets.styles.style.bg_color, fg=assets.styles.style.label_color).pack(pady=(assets.styles.style.padding_y // 2))
+                entry = tk.Entry(window)
+                entry.pack(padx=assets.styles.style.padding_x, pady=(0, assets.styles.style.padding_y))
+                entries[label] = entry
+
+            # function stock data user in MySql
+            def send_data_user():
+                data = {label: entry.get() for label, entry in entries.items()}
+                if all(data.values()):
+                    try:
+                        cursor.execute(
+                            """
+                            INSERT INTO users_data (name,lastname,email,country,age)
+                            VALUES (%s, %s, %s, %s, %s)
+                            """,
+                            (int(data["age"]), data["lastname"], data["email"],
+                            data["country"], data["age"])
+                        )
+                        conn.commit()
+                        for entry in entries.values():
+                            entry.delete(0, tk.END)
+                        cursor.execute(
+                            """
+                            INSERT INTO users (username,password)
+                            VALUES (%s,%s)
+                            """,
+                            (data["username"], data["password"])
+                        )
+                        conn.commit()
+                        messagebox.showinfo("Data user send sucessfuly ")
+                        for entry in entries.values():
+                            entry.delete(0, tk.END)
+                    except Exception as e:
+                        messagebox.showerror("Database Error", str(e))
+                else:
+                    messagebox.showwarning("Error", "Please fill in all the fields.")
+
+            tk.Button(
+                window,
+                text="Send",
+                font=assets.styles.style.font_button,
+                bg=assets.styles.style.button_color,
+                fg=assets.styles.style.button_text_color,
+                command=send_data_user
+            ).pack(pady=10)
+
+            tk.Button(
+                window,
+                text="Back login",
+                font=assets.styles.style.font_button,
+                bg=assets.styles.style.button_color,
+                fg=assets.styles.style.button_text_color,
+                command=login_page
+            ).pack(pady=10)
+
+
     tk.Button(
         window,
         text="Login",
@@ -99,6 +163,15 @@ def login_page(clear=True):
         bg=assets.styles.style.button_color,
         fg=assets.styles.style.button_text_color,
         command=try_login
+    ).pack(pady=10)
+
+    tk.Button(
+        window,
+        text="Create an account",
+        font=assets.styles.style.font_button,
+        bg=assets.styles.style.button_color,
+        fg=assets.styles.style.button_text_color,
+        command=create_account
     ).pack(pady=10)
 
 # for route visualize 
