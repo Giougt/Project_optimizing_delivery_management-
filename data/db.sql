@@ -20,5 +20,14 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users_data (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    country VARCHAR(100),
+    age INTEGER
+);
+
 -- for test admin --
 INSERT INTO users (username, password) VALUES ('admin', '1234');
